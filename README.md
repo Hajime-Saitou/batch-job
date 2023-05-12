@@ -78,5 +78,4 @@ print(job.exitCode)
 
 ## Output the log file
 
-To output logs, specify the logOutputDirectory parameter to entry(). The log file name is the job id with a "log" extension; if the job id is not specified, the base name from the first argument on the command line is used.
-
+To output logs, specify the logOutputDirectory parameter to constructor of JobManager class or Job.entry(). The log file name is the job id with a "log" extension; if the job id is not specified, the base name from the first argument on the command line is used.
