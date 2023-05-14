@@ -76,6 +76,66 @@ job.join()
 print(job.exitCode)
 ```
 
-## Output the log file
+## Output the job log
 
 To output logs, specify the logOutputDirectory parameter to constructor of JobManager class or Job.entry(). The log file name is the job id with a "log" extension; if the job id is not specified, the base name from the first argument on the command line is used.
+
+## Report
+You can output the execution result as a report by calling report(). Returns an empty result for jobs that have not run.
+
+Example for JobManager
+
+```
+{
+    "results": [
+        {
+            "hoge": {
+                "runnigStatus": "Completed",
+                "exitCode": 0,
+                "startDateTime": "2023/05/14 22:07:24.094654",
+                "finishDateTime": "2023/05/14 22:07:25.214075",
+                "elapsedTime": "00:00:01.119421"
+            }
+        },
+        {
+            "piyo": {
+                "runnigStatus": "Completed",
+                "exitCode": 0,
+                "startDateTime": "2023/05/14 22:07:26.101694",
+                "finishDateTime": "2023/05/14 22:07:29.213686",
+                "elapsedTime": "00:00:03.111991"
+            }
+        },
+        {
+            "fuga": {
+                "runnigStatus": "Completed",
+                "exitCode": 1,
+                "startDateTime": "2023/05/14 22:07:26.101694",
+                "finishDateTime": "2023/05/14 22:07:26.133045",
+                "elapsedTime": "00:00:00.31350"
+            }
+        },
+        {
+            "moga": {
+                "runnigStatus": "Ready",
+                "exitCode": "",
+                "startDateTime": "",
+                "finishDateTime": "",
+                "elapsedTime": ""
+            }
+        }
+    ]
+}
+```
+
+Example for Job
+
+```
+{
+    "runnigStatus": "Completed",
+    "exitCode": 0,
+    "startDateTime": "2023/05/14 22:07:30.145604",
+    "finishDateTime": "2023/05/14 22:07:33.109779",
+    "elapsedTime": "00:00:02.964175"
+}
+```

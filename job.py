@@ -1,9 +1,11 @@
 import subprocess
 import threading
 import time
+import datetime
+import enum
 import os
 
-class JobRunningStatus:
+class JobRunningStatus(enum.IntEnum):
     Ready = 0
     Running = 1
     Completed = 2
@@ -53,6 +55,13 @@ class JobManager:
 
     def errorOccurred(self):
         return len([ job for job in self.jobs if job.completed() and job.exitCode != 0 ]) >= 1
+    
+    def report(self):
+        report = { "results": [] }
+        for job in self.jobs:
+            report["results"].append({ job.id: job.report() })
+
+        return report
 
 class Job(threading.Thread):
     def entry(self, commandLine, id="", waiting = [], logOutputDirectory="", jobManager=None):
@@ -61,8 +70,10 @@ class Job(threading.Thread):
         self.waiting = waiting
         self.logOutputDirectory = logOutputDirectory
         self.jobManager = jobManager
-        self.exitCode = 0
+        self.exitCode = None
         self.runningStatus = JobRunningStatus.Ready
+        self.startDateTime = None
+        self.finishDateTime = None
 
     def __getBaseNameWithoutExtension(self, filename):
         return f"{os.path.basename(filename).split('.')[0]}"
@@ -102,7 +113,9 @@ class Job(threading.Thread):
 
     def run(self):
         self.runningStatus = JobRunningStatus.Running
+        self.startDateTime = datetime.datetime.now()
         completePocess = subprocess.run(self.commandLine, capture_output=True, text=True)
+        self.finishDateTime = datetime.datetime.now()
         self.exitCode = completePocess.returncode
         self.runningStatus = JobRunningStatus.Completed
 
@@ -113,3 +126,24 @@ class Job(threading.Thread):
             logFileName = os.path.join(self.logOutputDirectory, f"{self.id}.log")
             with open(logFileName, "w", encoding="utf-8") as f:
                 f.writelines(completePocess.stdout)
+
+    def report(self):
+        return {
+                "runnigStatus": self.runningStatus.name,
+                "exitCode": self.exitCode  if self.exitCode is not None else "",
+                "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else "",
+                "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else "",
+                "elapsedTime": self.__timedeltaToStr(self.finishDateTime - self.startDateTime) if self.finishDateTime is not None else ""
+        }
+
+    def __timedeltaToStr(self, delta):
+        totalSeconds = delta.total_seconds()
+        hours = int(totalSeconds / 3600)
+        totalSeconds -= hours * 3600
+        minutes = int(totalSeconds // 60)
+        totalSeconds -= minutes * 60
+        seconds = int(totalSeconds)
+        totalSeconds -= seconds
+        totalSeconds *= 1000000
+
+        return f"{hours:02}:{minutes:02}:{seconds:02}.{int(totalSeconds)}"
