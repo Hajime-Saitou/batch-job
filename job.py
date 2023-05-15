@@ -9,6 +9,7 @@ class JobRunningStatus(enum.IntEnum):
     Ready = 0
     Running = 1
     Completed = 2
+    RetryOut = 3
 
 class JobManager:
     def __init__(self, logOutputDirectory=""):
@@ -64,16 +65,24 @@ class JobManager:
         return report
 
 class Job(threading.Thread):
-    def entry(self, commandLine, id="", waiting = [], logOutputDirectory="", jobManager=None):
+    def entry(self, commandLine, id="", timeout=None, retry=1, delay=0,backoff=1, waiting = [], logOutputDirectory="", jobManager=None):
         self.commandLine = commandLine
         self.id = id if id != "" else self.__getBaseNameWithoutExtension(self.commandLine.split(' ')[0])
         self.waiting = waiting
         self.logOutputDirectory = logOutputDirectory
+        self.logFileName = "" if not self.logOutputDirectory else os.path.join(self.logOutputDirectory, f"{self.id}.log")
         self.jobManager = jobManager
         self.exitCode = None
         self.runningStatus = JobRunningStatus.Ready
         self.startDateTime = None
         self.finishDateTime = None
+
+        # retry parameter
+        self.retry = retry
+        self.timeout = timeout
+        self.delay = delay
+        self.backoff = backoff
+        self.retried = 0
 
     def __getBaseNameWithoutExtension(self, filename):
         return f"{os.path.basename(filename).split('.')[0]}"
@@ -109,32 +118,48 @@ class Job(threading.Thread):
         return self._runningStatus == JobRunningStatus.Running
 
     def completed(self):
-        return self._runningStatus == JobRunningStatus.Completed
+        return self._runningStatus in [ JobRunningStatus.Completed, JobRunningStatus.RetryOut ]
 
     def run(self):
         self.runningStatus = JobRunningStatus.Running
         self.startDateTime = datetime.datetime.now()
-        completePocess = subprocess.run(self.commandLine, capture_output=True, text=True)
+
+        for trialCounter in range(0, self.retry + 1):
+            try:
+                completePocess = subprocess.run(self.commandLine, capture_output=True, text=True, timeout=self.timeout)
+                self.writeLog(completePocess.stdout)
+            except subprocess.TimeoutExpired as e:
+                self.writeLog(e.output)
+                self.writeLog(f"Error: Timed out({trialCounter}/{self.retry})")
+
+                self.retried = trialCounter
+                time.sleep((trialCounter + 1) ** self.backoff + self.delay)       # Exponential backoff
+            else:
+                self.finishDateTime = datetime.datetime.now()
+                self.exitCode = completePocess.returncode               # latest return code
+                self.runningStatus = JobRunningStatus.Completed
+                return
+
         self.finishDateTime = datetime.datetime.now()
-        self.exitCode = completePocess.returncode
-        self.runningStatus = JobRunningStatus.Completed
+        self.runningStatus = JobRunningStatus.RetryOut
 
-        if self.logOutputDirectory:
-            if not os.path.exists(self.logOutputDirectory):
-                os.makedirs(self.logOutputDirectory)
+    def writeLog(self, text):
+        if not self.logOutputDirectory:
+            return
 
-            logFileName = os.path.join(self.logOutputDirectory, f"{self.id}.log")
-            with open(logFileName, "w", encoding="utf-8") as f:
-                f.writelines(completePocess.stdout)
+        with open(self.logFileName, "a", encoding="utf-8") as f:
+            f.writelines(text)
 
     def report(self):
         return {
                 "runnigStatus": self.runningStatus.name,
+                "retried": self.retried,
                 "exitCode": self.exitCode  if self.exitCode is not None else "",
                 "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else "",
                 "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else "",
                 "elapsedTime": self.__timedeltaToStr(self.finishDateTime - self.startDateTime) if self.finishDateTime is not None else ""
         }
+
 
     def __timedeltaToStr(self, delta):
         totalSeconds = delta.total_seconds()

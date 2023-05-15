@@ -16,7 +16,11 @@ At first, import the JobManager from this module.
 from job import JobManager
 ```
 
-Prepare a job context consisting of job id, command line, waiting list of other jobs, and pass it to as an argument to JobManager.entry().
+Prepare a job context consisting of job parameters and pass it as an argument to JobManager.entry().
+
+id ... Job ID (arbitrary name, if omitted, the base name of the first command line argument)
+command line ... command to execute and command line parameters
+Waiting list of other job IDs ... List of job IDs waiting to run
 
 ```
 jobContexts = [
@@ -137,5 +141,26 @@ Example for Job
     "startDateTime": "2023/05/14 22:07:30.145604",
     "finishDateTime": "2023/05/14 22:07:33.109779",
     "elapsedTime": "00:00:02.964175"
+}
+```
+
+## Retry on timed out
+If the job fails by timed out, it can be retried. The retry parameters are as follows.Retry parameters can be set for individual jobs.
+
+retry ... Retry count (default is 0, no retry)
+timeout ... Number of seconds to timeout the job (default is None, no timeout)
+delay ... number of seconds to delay the job on retry (default 0, no delay)
+backkoff ... power to back off the retry interval (default 1)
+
+The report for a failed retry is shown below.
+
+```
+{
+    "runnigStatus": "RetryOut",
+    "retried": 1,
+    "exitCode": "",
+    "startDateTime": "2023/05/16 06:36:59.602033",
+    "finishDateTime": "2023/05/16 06:37:08.213185",
+    "elapsedTime": "00:00:08.611152"
 }
 ```
