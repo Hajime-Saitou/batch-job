@@ -1,3 +1,7 @@
+# simplejob
+# https://github.com/Hajime-Saitou/simplejob
+#
+# Copyright (c) 2023 Hajime Saito
 import subprocess
 import threading
 import time
@@ -77,7 +81,7 @@ class SimpleJob(threading.Thread):
         self.startDateTime = None
         self.finishDateTime = None
 
-        # retry parameter
+        # retry parameters
         self.retry = retry
         self.timeout = timeout
         self.delay = delay
@@ -152,20 +156,19 @@ class SimpleJob(threading.Thread):
 
     def report(self):
         return {
-                "runnigStatus": self.runningStatus.name,
-                "retried": self.retried,
-                "exitCode": self.exitCode  if self.exitCode is not None else "",
-                "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else "",
-                "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else "",
-                "elapsedTime": self.__timedeltaToStr(self.finishDateTime - self.startDateTime) if self.finishDateTime is not None else ""
+            "runnigStatus": self.runningStatus.name,
+            "retried": self.retried,
+            "exitCode": self.exitCode  if self.exitCode is not None else "",
+            "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else "",
+            "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else "",
+            "elapsedTime": self.__timedeltaToStr(self.finishDateTime - self.startDateTime) if self.finishDateTime is not None else ""
         }
-
 
     def __timedeltaToStr(self, delta):
         totalSeconds = delta.total_seconds()
         hours = int(totalSeconds / 3600)
         totalSeconds -= hours * 3600
-        minutes = int(totalSeconds // 60)
+        minutes = int(totalSeconds / 60)
         totalSeconds -= minutes * 60
         seconds = int(totalSeconds)
         totalSeconds -= seconds
