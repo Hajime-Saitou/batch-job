@@ -1,5 +1,5 @@
 import time
-from job import JobManager, Job
+from simplejob import SimpleJobManager, SimpleJob
 import json
 
 if __name__ == "__main__":
@@ -10,7 +10,7 @@ if __name__ == "__main__":
         { "id": "fuga", "commandLine": r"timeout /z", "waiting": [ "hoge" ] },
         { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waiting": [ "hoge", "fuga" ] },
     ]
-    jobManager = JobManager()
+    jobManager = SimpleJobManager()
     jobManager.entry(jobContexts)
 
     while not jobManager.completed():
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     print(json.dumps(jobManager.report(), indent=4))
 
     # Run with the Job class
-    job = Job()
+    job = SimpleJob()
     job.entry(commandLine="timeout /t 3 /nobreak")
     job.start()
 

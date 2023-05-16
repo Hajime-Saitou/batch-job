@@ -11,7 +11,7 @@ class JobRunningStatus(enum.IntEnum):
     Completed = 2
     RetryOut = 3
 
-class JobManager:
+class SimpleJobManager:
     def __init__(self, logOutputDirectory=""):
         self.lock = threading.Lock()
         self.allJobRunningStatus = {}
@@ -30,7 +30,7 @@ class JobManager:
             if context["id"] in self.allJobRunningStatus.keys():
                 raise ValueError(f"Duplicate key. id: {context['id']}")
 
-            job = Job()
+            job = SimpleJob()
             context["jobManager"] = self
             context["logOutputDirectory"] = self.logOutputDirecotry
             job.entry(**context)
@@ -64,7 +64,7 @@ class JobManager:
 
         return report
 
-class Job(threading.Thread):
+class SimpleJob(threading.Thread):
     def entry(self, commandLine, id="", timeout=None, retry=1, delay=0,backoff=1, waiting = [], logOutputDirectory="", jobManager=None):
         self.commandLine = commandLine
         self.id = id if id != "" else self.__getBaseNameWithoutExtension(self.commandLine.split(' ')[0])

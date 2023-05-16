@@ -1,4 +1,4 @@
-# simple-job
+# simplejob
 This is simple job execution module.
 
 # Overview
@@ -13,7 +13,7 @@ If you want to run a related many jobs, use the JobManager class.
 At first, import the JobManager from this module.
 
 ```
-from job import JobManager
+from simplejob import JobManager
 ```
 
 Prepare a job context consisting of job parameters and pass it as an argument to JobManager.entry().
@@ -29,7 +29,7 @@ jobContexts = [
     { "id": "fuga", "commandLine": r"timeout /t 5 /nobreak", "waiting": [ "hoge" ] },
     { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waiting": [ "hoge", "fuga" ] },
 ]
-jobManager = JobManager()
+jobManager = SimpleJobManager()
 jobManager.entry(jobContexts)
 ```
 
@@ -62,7 +62,7 @@ If you want to run a single job, use the Job class. A job class is a wrapping of
 At first, import the Job from this module.
 
 ```
-from job import Job
+from simplejob import SimpleJob
 ```
 
 Prepare a job context consisting of job id(optional), command line, waiting list of other jobs(do not set), and pass it to as an argument to Job.entry().
@@ -87,7 +87,7 @@ To output logs, specify the logOutputDirectory parameter to constructor of JobMa
 ## Report
 You can output the execution result as a report by calling report(). Returns an empty result for jobs that have not run.
 
-Example for JobManager
+Example for SimpleJobManager.report()
 
 ```
 {
@@ -95,33 +95,37 @@ Example for JobManager
         {
             "hoge": {
                 "runnigStatus": "Completed",
+                "retried": 0,
                 "exitCode": 0,
-                "startDateTime": "2023/05/14 22:07:24.094654",
-                "finishDateTime": "2023/05/14 22:07:25.214075",
-                "elapsedTime": "00:00:01.119421"
+                "startDateTime": "2023/05/17 05:52:38.486808",
+                "finishDateTime": "2023/05/17 05:52:39.195064",
+                "elapsedTime": "00:00:00.708256"
             }
         },
         {
             "piyo": {
                 "runnigStatus": "Completed",
+                "retried": 0,
                 "exitCode": 0,
-                "startDateTime": "2023/05/14 22:07:26.101694",
-                "finishDateTime": "2023/05/14 22:07:29.213686",
-                "elapsedTime": "00:00:03.111991"
+                "startDateTime": "2023/05/17 05:52:39.501339",
+                "finishDateTime": "2023/05/17 05:52:42.160141",
+                "elapsedTime": "00:00:02.658802"
             }
         },
         {
             "fuga": {
                 "runnigStatus": "Completed",
+                "retried": 0,
                 "exitCode": 1,
-                "startDateTime": "2023/05/14 22:07:26.101694",
-                "finishDateTime": "2023/05/14 22:07:26.133045",
-                "elapsedTime": "00:00:00.31350"
+                "startDateTime": "2023/05/17 05:52:39.501339",
+                "finishDateTime": "2023/05/17 05:52:39.516347",
+                "elapsedTime": "00:00:00.15008"
             }
         },
         {
             "moga": {
                 "runnigStatus": "Ready",
+                "retried": 0,
                 "exitCode": "",
                 "startDateTime": "",
                 "finishDateTime": "",
@@ -132,15 +136,16 @@ Example for JobManager
 }
 ```
 
-Example for Job
+Example for SimpleJob.report()
 
 ```
 {
     "runnigStatus": "Completed",
+    "retried": 0,
     "exitCode": 0,
-    "startDateTime": "2023/05/14 22:07:30.145604",
-    "finishDateTime": "2023/05/14 22:07:33.109779",
-    "elapsedTime": "00:00:02.964175"
+    "startDateTime": "2023/05/17 05:52:42.528955",
+    "finishDateTime": "2023/05/17 05:52:45.141805",
+    "elapsedTime": "00:00:02.612849"
 }
 ```
 
