@@ -5,9 +5,10 @@
 import subprocess
 import threading
 import time
-import datetime
+from datetime import datetime, timedelta
 import enum
 import os
+import uuid
 
 class JobRunningStatus(enum.IntEnum):
     Ready = 0
@@ -16,20 +17,20 @@ class JobRunningStatus(enum.IntEnum):
     RetryOut = 3
 
 class SimpleJobManager:
-    def __init__(self, logOutputDirectory=""):
+    def __init__(self, logOutputDirectory:str="") -> None:
         self.lock = threading.Lock()
-        self.allJobRunningStatus = {}
-        self.jobs = []
-        self.logOutputDirecotry = logOutputDirectory
+        self.allJobRunningStatus:dict = {}
+        self.jobs:list = []
+        self.logOutputDirecotry:str = logOutputDirectory
 
-    def entry(self, jobContexts):
+    def entry(self, jobContexts:dict) -> None:
         self.join()
 
         self.lock.acquire()
         self.allJobRunningStatus.clear()
         self.lock.release()
 
-        self.jobs = []
+        self.jobs.clear()
         for context in jobContexts:
             if context["id"] in self.allJobRunningStatus.keys():
                 raise ValueError(f"Duplicate key. id: {context['id']}")
@@ -40,23 +41,23 @@ class SimpleJobManager:
             job.entry(**context)
             self.jobs.append(job)
 
-    def runAllReadyJobs(self):
+    def runAllReadyJobs(self) -> None:
         [ job.start() for job in self.jobs if job.ready() ]
 
-    def running(self):
+    def running(self) -> bool:
         return len([ job for job in self.jobs if job.running() ]) >= 1
 
-    def join(self, interval=1):
+    def join(self, interval:int=1) -> None:
         while self.running():
             time.sleep(interval)
 
-    def completed(self):
+    def completed(self) -> bool:
         return len([ job for job in self.jobs if job.completed() ]) == len(self.jobs)
 
-    def errorOccurred(self):
-        return len([ job for job in self.jobs if job.completed() and job.exitCode.hasError() ]) >= 1
+    def errorOccurred(self) -> bool:
+        return len([ job for job in self.jobs if job.completed() and job.hasError() ]) >= 1
 
-    def report(self):
+    def report(self) -> dict:
         report = { "results": [] }
         for job in self.jobs:
             report["results"].append({ job.id: job.report() })
@@ -64,34 +65,31 @@ class SimpleJobManager:
         return report
 
 class SimpleJob(threading.Thread):
-    def entry(self, commandLine, id="", timeout=None, retry=1, delay=0,backoff=1, waiting = [], logOutputDirectory="", jobManager=None):
-        self.commandLine = commandLine
-        self.id = id if id != "" else self.__getBaseNameWithoutExtension(self.commandLine.split(' ')[0])
-        self.waiting = waiting
-        self.logOutputDirectory = logOutputDirectory
-        self.logFileName = "" if not self.logOutputDirectory else os.path.join(self.logOutputDirectory, f"{self.id}.log")
-        self.jobManager = jobManager
-        self.exitCode = 0
-        self.runningStatus = JobRunningStatus.Ready
-        self.startDateTime = None
-        self.finishDateTime = None
+    def entry(self, commandLine:str, id:str="", timeout:int=None, retry:int=1, delay:int=0, backoff:int=1, waiting:list = [], logOutputDirectory:str="", jobManager:SimpleJobManager=None) -> None:
+        self.commandLine:str = commandLine
+        self.id:str = id if id != "" else uuid.uuid4()
+        self.waiting:list = waiting
+        self.logOutputDirectory:str = logOutputDirectory
+        self.logFileName:str = "" if not self.logOutputDirectory else os.path.join(self.logOutputDirectory, f"{self.id}.log")
+        self.jobManager:SimpleJobManager = jobManager
+        self.exitCode:int = 0
+        self.runningStatus:JobRunningStatus = JobRunningStatus.Ready
+        self.startDateTime:datetime = None
+        self.finishDateTime:datetime = None
 
         # retry parameters
-        self.retry = retry
-        self.timeout = timeout
-        self.delay = delay
-        self.backoff = backoff
-        self.retried = 0
-
-    def __getBaseNameWithoutExtension(self, filename):
-        return f"{os.path.basename(filename).split('.')[0]}"
+        self.retry:int = retry
+        self.timeout:int = timeout
+        self.delay:int = delay
+        self.backoff:int = backoff
+        self.retried:int = 0
 
     @property
-    def runningStatus(self):
+    def runningStatus(self) -> JobRunningStatus:
         return self._runningStatus
 
     @runningStatus.setter
-    def runningStatus(self, value):
+    def runningStatus(self, value:JobRunningStatus) -> None:
         self._runningStatus = value
 
         if self.jobManager:
@@ -99,10 +97,10 @@ class SimpleJob(threading.Thread):
             self.jobManager.allJobRunningStatus[self.id] = value
             self.jobManager.lock.release()
 
-    def hasError(self):
+    def hasError(self) -> bool:
         return self.exitCode != 0
 
-    def ready(self):
+    def ready(self) -> bool:
         if self.runningStatus != JobRunningStatus.Ready:
             return False
 
@@ -111,20 +109,20 @@ class SimpleJob(threading.Thread):
         
         if self.jobManager:
             self.jobManager.lock.acquire()
-            completed = [ job for job in self.jobManager.jobs if job.id in self.waiting and job.completed() and not job.exitCode.hasError() ]
+            completed = [ job for job in self.jobManager.jobs if job.id in self.waiting and job.completed() and not job.hasError() ]
             self.jobManager.lock.release()
 
             return len(completed) == len(self.waiting)
 
-    def running(self):
+    def running(self) -> JobRunningStatus:
         return self._runningStatus == JobRunningStatus.Running
 
-    def completed(self):
+    def completed(self) -> bool:
         return self._runningStatus in [ JobRunningStatus.Completed, JobRunningStatus.RetryOut ]
 
-    def run(self):
+    def run(self) -> None:
         self.runningStatus = JobRunningStatus.Running
-        self.startDateTime = datetime.datetime.now()
+        self.startDateTime = datetime.now()
 
         for trialCounter in range(0, self.retry + 1):
             try:
@@ -137,22 +135,22 @@ class SimpleJob(threading.Thread):
                 self.retried = trialCounter
                 time.sleep((trialCounter + 1) ** self.backoff + self.delay)       # Exponential backoff
             else:
-                self.finishDateTime = datetime.datetime.now()
+                self.finishDateTime = datetime.now()
                 self.exitCode = completePocess.returncode               # latest return code
                 self.runningStatus = JobRunningStatus.Completed
                 return
 
-        self.finishDateTime = datetime.datetime.now()
+        self.finishDateTime = datetime.now()
         self.runningStatus = JobRunningStatus.RetryOut
 
-    def writeLog(self, text):
+    def writeLog(self, text) -> None:
         if not self.logOutputDirectory:
             return
 
         with open(self.logFileName, "a", encoding="utf-8") as f:
             f.writelines(text)
 
-    def report(self):
+    def report(self) -> dict:
         return {
             "runnigStatus": self.runningStatus.name,
             "retried": self.retried,
@@ -162,7 +160,7 @@ class SimpleJob(threading.Thread):
             "elapsedTime": self.__timedeltaToStr(self.finishDateTime - self.startDateTime) if self.finishDateTime is not None else ""
         }
 
-    def __timedeltaToStr(self, delta):
+    def __timedeltaToStr(self, delta:timedelta) -> str:
         totalSeconds = delta.total_seconds()
         hours = int(totalSeconds / 3600)
         totalSeconds -= hours * 3600
