@@ -41,8 +41,7 @@ class SimpleJobManager:
             self.jobs.append(job)
 
     def runAllReadyJobs(self):
-        ready = [ job for job in self.jobs if job.ready() ]
-        [ job.start() for job in ready ]
+        [ job.start() for job in self.jobs if job.ready() ]
 
     def running(self):
         return len([ job for job in self.jobs if job.running() ]) >= 1
@@ -52,15 +51,11 @@ class SimpleJobManager:
             time.sleep(interval)
 
     def completed(self):
-        self.lock.acquire()
-        completed = [ job for job in self.jobs if job.completed() ]
-        self.lock.release()
-
-        return len(completed) == len(self.jobs)
+        return len([ job for job in self.jobs if job.completed() ]) == len(self.jobs)
 
     def errorOccurred(self):
-        return len([ job for job in self.jobs if job.completed() and job.exitCode != 0 ]) >= 1
-    
+        return len([ job for job in self.jobs if job.completed() and job.exitCode.hasError() ]) >= 1
+
     def report(self):
         report = { "results": [] }
         for job in self.jobs:
@@ -76,7 +71,7 @@ class SimpleJob(threading.Thread):
         self.logOutputDirectory = logOutputDirectory
         self.logFileName = "" if not self.logOutputDirectory else os.path.join(self.logOutputDirectory, f"{self.id}.log")
         self.jobManager = jobManager
-        self.exitCode = None
+        self.exitCode = 0
         self.runningStatus = JobRunningStatus.Ready
         self.startDateTime = None
         self.finishDateTime = None
@@ -104,6 +99,9 @@ class SimpleJob(threading.Thread):
             self.jobManager.allJobRunningStatus[self.id] = value
             self.jobManager.lock.release()
 
+    def hasError(self):
+        return self.exitCode != 0
+
     def ready(self):
         if self.runningStatus != JobRunningStatus.Ready:
             return False
@@ -113,7 +111,7 @@ class SimpleJob(threading.Thread):
         
         if self.jobManager:
             self.jobManager.lock.acquire()
-            completed = [ job for job in self.jobManager.jobs if job.id in self.waiting and job.completed() and job.exitCode == 0 ]
+            completed = [ job for job in self.jobManager.jobs if job.id in self.waiting and job.completed() and not job.exitCode.hasError() ]
             self.jobManager.lock.release()
 
             return len(completed) == len(self.waiting)
