@@ -18,7 +18,7 @@ class JobRunningStatus(enum.IntEnum):
 
 class SimpleJobManager:
     def __init__(self, logOutputDirectory:str="") -> None:
-        self.lock = threading.Lock()
+        self.lock:threading.Lock = threading.Lock()
         self.allJobRunningStatus:dict = {}
         self.jobs:list = []
         self.logOutputDirecotry:str = logOutputDirectory
