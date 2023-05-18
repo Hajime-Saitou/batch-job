@@ -140,6 +140,7 @@ class SimpleJob(threading.Thread):
                 self.runningStatus = JobRunningStatus.Completed
                 return
 
+        self.exitCode = None
         self.finishDateTime = datetime.now()
         self.runningStatus = JobRunningStatus.RetryOut
 
@@ -153,11 +154,11 @@ class SimpleJob(threading.Thread):
     def report(self) -> dict:
         return {
             "runnigStatus": self.runningStatus.name,
-            "retried": self.retried,
-            "exitCode": self.exitCode  if self.exitCode is not None else "",
-            "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else "",
-            "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else "",
-            "elapsedTime": self.__timedeltaToStr(self.finishDateTime - self.startDateTime) if self.finishDateTime is not None else ""
+            "retried": self.retried if self.timeout is not None else None,
+            "exitCode": self.exitCode  if self.completed() else None,
+            "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else None,
+            "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else None,
+            "elapsedTime": self.__timedeltaToStr(self.finishDateTime - self.startDateTime) if self.finishDateTime is not None else None
         }
 
     def __timedeltaToStr(self, delta:timedelta) -> str:

@@ -95,41 +95,41 @@ Example for SimpleJobManager.report()
         {
             "hoge": {
                 "runnigStatus": "Completed",
-                "retried": 0,
+                "retried": null,
                 "exitCode": 0,
-                "startDateTime": "2023/05/17 05:52:38.486808",
-                "finishDateTime": "2023/05/17 05:52:39.195064",
-                "elapsedTime": "00:00:00.708256"
+                "startDateTime": "2023/05/18 21:45:24.243201",
+                "finishDateTime": "2023/05/18 21:45:25.189776",
+                "elapsedTime": "00:00:00.946575"
             }
         },
         {
             "piyo": {
                 "runnigStatus": "Completed",
-                "retried": 0,
+                "retried": null,
                 "exitCode": 0,
-                "startDateTime": "2023/05/17 05:52:39.501339",
-                "finishDateTime": "2023/05/17 05:52:42.160141",
-                "elapsedTime": "00:00:02.658802"
+                "startDateTime": "2023/05/18 21:45:25.253739",
+                "finishDateTime": "2023/05/18 21:45:28.116363",
+                "elapsedTime": "00:00:02.862623"
             }
         },
         {
             "fuga": {
                 "runnigStatus": "Completed",
-                "retried": 0,
+                "retried": null,
                 "exitCode": 1,
-                "startDateTime": "2023/05/17 05:52:39.501339",
-                "finishDateTime": "2023/05/17 05:52:39.516347",
-                "elapsedTime": "00:00:00.15008"
+                "startDateTime": "2023/05/18 21:45:25.253739",
+                "finishDateTime": "2023/05/18 21:45:25.269691",
+                "elapsedTime": "00:00:00.15952"
             }
         },
         {
             "moga": {
                 "runnigStatus": "Ready",
-                "retried": 0,
-                "exitCode": "",
-                "startDateTime": "",
-                "finishDateTime": "",
-                "elapsedTime": ""
+                "retried": null,
+                "exitCode": null,
+                "startDateTime": null,
+                "finishDateTime": null,
+                "elapsedTime": null
             }
         }
     ]
@@ -141,11 +141,11 @@ Example for SimpleJob.report()
 ```
 {
     "runnigStatus": "Completed",
-    "retried": 0,
+    "retried": null,
     "exitCode": 0,
-    "startDateTime": "2023/05/17 05:52:42.528955",
-    "finishDateTime": "2023/05/17 05:52:45.141805",
-    "elapsedTime": "00:00:02.612849"
+    "startDateTime": "2023/05/18 21:45:28.276206",
+    "finishDateTime": "2023/05/18 21:45:31.197224",
+    "elapsedTime": "00:00:02.921018"
 }
 ```
 
@@ -163,9 +163,9 @@ The report for a failed retry is shown below.
 {
     "runnigStatus": "RetryOut",
     "retried": 1,
-    "exitCode": "",
-    "startDateTime": "2023/05/16 06:36:59.602033",
-    "finishDateTime": "2023/05/16 06:37:08.213185",
-    "elapsedTime": "00:00:08.611152"
+    "exitCode": null,
+    "startDateTime": "2023/05/18 21:47:38.528989",
+    "finishDateTime": "2023/05/18 21:47:43.594701",
+    "elapsedTime": "00:00:05.65712"
 }
 ```
