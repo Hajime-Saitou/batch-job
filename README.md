@@ -68,7 +68,7 @@ from simplejob import SimpleJob
 Prepare a job context consisting of job id(optional), command line, waiting list of other jobs(do not set), and pass it to as an argument to Job.entry().
 
 ```
-job = Job()
+job = SimpleJob()
 job.entry(commandLine="timeout /t 3 /nobreak")
 ```
 
