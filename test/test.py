@@ -1,5 +1,10 @@
+# simplejob
+# https://github.com/Hajime-Saitou/simplejob
+#
+# Copyright (c) 2023 Hajime Saito
+# MIT License
 import time
-from simplejob import SimpleJobManager, SimpleJob
+from simplejob.simplejob import SimpleJobManager, SimpleJob
 import json
 
 if __name__ == "__main__":

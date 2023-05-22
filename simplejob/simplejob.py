@@ -2,6 +2,7 @@
 # https://github.com/Hajime-Saitou/simplejob
 #
 # Copyright (c) 2023 Hajime Saito
+# MIT License
 import subprocess
 import threading
 import time

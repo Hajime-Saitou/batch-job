@@ -13,7 +13,7 @@ If you want to run a related many jobs, use the JobManager class.
 At first, import the JobManager from this module.
 
 ```
-from simplejob import JobManager
+from simplejob import SimpleJobManager
 ```
 
 Prepare a job context consisting of job parameters and pass it as an argument to JobManager.entry().
