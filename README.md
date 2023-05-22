@@ -6,6 +6,12 @@ You can execute job with relationship using this module. Job execution time can 
 
 # Getting Started
 
+## install package
+
+```
+pip install simplejob
+```
+
 ## Run with the JobManager class
 
 If you want to run a related many jobs, use the JobManager class.
@@ -13,7 +19,7 @@ If you want to run a related many jobs, use the JobManager class.
 At first, import the JobManager from this module.
 
 ```
-from simplejob import SimpleJobManager
+from simplejob.simplejob import SimpleJobManager
 ```
 
 Prepare a job context consisting of job parameters and pass it as an argument to JobManager.entry().
@@ -62,7 +68,7 @@ If you want to run a single job, use the Job class. A job class is a wrapping of
 At first, import the Job from this module.
 
 ```
-from simplejob import SimpleJob
+from simplejob.simplejob import SimpleJob
 ```
 
 Prepare a job context consisting of job id(optional), command line, waiting list of other jobs(do not set), and pass it to as an argument to Job.entry().
