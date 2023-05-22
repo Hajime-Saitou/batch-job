@@ -67,6 +67,9 @@ class SimpleJobManager:
 
 class SimpleJob(threading.Thread):
     def entry(self, commandLine:str, id:str="", timeout:int=None, retry:int=1, delay:int=0, backoff:int=1, waiting:list = [], logOutputDirectory:str="", jobManager:SimpleJobManager=None) -> None:
+        if not jobManager and len(waiting) > 0:
+            raise ValueError("Waiting list can set the JobManager together.")
+
         self.commandLine:str = commandLine
         self.id:str = id if id != "" else uuid.uuid4()
         self.waiting:list = waiting
