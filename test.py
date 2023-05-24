@@ -22,11 +22,10 @@ if __name__ == "__main__":
         jobManager.runAllReadyJobs()
         if jobManager.errorOccurred():
             print("error occurred")
+            jobManager.join()
             break
 
         time.sleep(1)
-
-    jobManager.join()
 
     print(json.dumps(jobManager.report(), indent=4))
 
