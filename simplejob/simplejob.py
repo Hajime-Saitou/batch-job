@@ -25,16 +25,11 @@ class SimpleJobManager:
         self.jobs:list = []
         self.logOutputDirecotry:str = logOutputDirectory
 
-    def checkDuplicatedIds(self, jobContexts:list):
-        dupKeys = [ key for ( key, value ) in Counter([ context["id"] for context in jobContexts ]).items() if value > 1 ]
-        if len(dupKeys) > 0:
-            raise ValueError(f"Id duplicated. ids={dupKeys}")
+    def getDuplicatedIds(self, jobContexts:list) -> list:
+        return [ key for ( key, value ) in Counter([ context["id"] for context in jobContexts ]).items() if value > 1 ]
 
-    def checkCircularReferencedIds(self, jobContexts:list):
-        def traceGraph(id, graph, visited=None) -> bool:
-            if not visited:
-                visited = set()
-
+    def getCircularReferencedIds(self, jobContexts:list) -> list:
+        def traceGraph(id, graph, visited=set()) -> bool:
             visited.add(id)
 
             for neighbor in graph.get(id, []):
@@ -45,17 +40,16 @@ class SimpleJobManager:
             return False
 
         graph = { context["id"]: context.get("waits", []) for context in jobContexts }
-        circularIds = []
-        for id in graph:
-            if traceGraph(id, graph, None):
-                circularIds.append(id)
-
-        if len(circularIds) > 0:
-            raise ValueError(f"Circular referenced. ids={circularIds}")
+        return [ id for id in graph.keys() if traceGraph(id, graph) ]
 
     def entry(self, jobContexts:list) -> None:
-        self.checkDuplicatedIds(jobContexts)
-        self.checkCircularReferencedIds(jobContexts)
+        dupKeys = self.getDuplicatedIds(jobContexts)
+        if len(dupKeys) > 0:
+            raise ValueError(f"Id duplicated. ids={dupKeys}")
+
+        circularIds = self.getCircularReferencedIds(jobContexts)
+        if len(circularIds) > 0:
+            raise ValueError(f"Circular referenced. ids={circularIds}")
 
         self.join()
 
