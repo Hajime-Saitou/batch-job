@@ -97,7 +97,7 @@ class SimpleJobManager:
 
         return report
 
-    def status(self):
+    def getRunningStatus(self):
         return Counter([ job.runningStatus.name for job in self.jobs ])
 
 class SimpleJob(threading.Thread):
