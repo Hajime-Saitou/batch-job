@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import enum
 import os
 import uuid
+from collections import Counter
 
 class JobRunningStatus(enum.IntEnum):
     Ready = 0
@@ -24,7 +25,38 @@ class SimpleJobManager:
         self.jobs:list = []
         self.logOutputDirecotry:str = logOutputDirectory
 
-    def entry(self, jobContexts:dict) -> None:
+    def checkDuplicatedIds(self, jobContexts:list):
+        dupKeys = [ key for ( key, value ) in Counter([ context["id"] for context in jobContexts ]).items() if value > 1 ]
+        if len(dupKeys) > 0:
+            raise ValueError(f"Id duplicated. ids={dupKeys}")
+
+    def checkCircularReferencedIds(self, jobContexts:list):
+        def traceGraph(id, graph, visited=None) -> bool:
+            if not visited:
+                visited = set()
+
+            visited.add(id)
+
+            for neighbor in graph.get(id, []):
+                if neighbor in visited or traceGraph(neighbor, graph, visited):
+                    return True
+
+            visited.remove(id)
+            return False
+
+        graph = { context["id"]: context.get("waiting", []) for context in jobContexts }
+        circularIds = []
+        for id in graph:
+            if traceGraph(id, graph, None):
+                circularIds.append(id)
+
+        if len(circularIds) > 0:
+            raise ValueError(f"Circular referenced. ids={circularIds}")
+
+    def entry(self, jobContexts:list) -> None:
+        self.checkDuplicatedIds(jobContexts)
+        self.checkCircularReferencedIds(jobContexts)
+
         self.join()
 
         self.lock.acquire()
@@ -33,9 +65,6 @@ class SimpleJobManager:
 
         self.jobs.clear()
         for context in jobContexts:
-            if context["id"] in self.allJobRunningStatus.keys():
-                raise ValueError(f"Duplicate key. id: {context['id']}")
-
             job = SimpleJob()
             context["jobManager"] = self
             context["logOutputDirectory"] = self.logOutputDirecotry
