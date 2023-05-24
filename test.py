@@ -25,7 +25,7 @@ if __name__ == "__main__":
             jobManager.join()
             break
 
-        print(jobManager.status())
+        print(jobManager.getRunningStatus())
 
         time.sleep(1)
 
