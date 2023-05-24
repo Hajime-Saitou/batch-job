@@ -24,6 +24,7 @@ class SimpleJobManager:
         self.allJobRunningStatus:dict = {}
         self.jobs:list = []
         self.logOutputDirecotry:str = logOutputDirectory
+        self.jobContexts = None
 
     def detectDuplicatedIds(self, jobContexts:list) -> list:
         return [ key for ( key, value ) in Counter([ context["id"] for context in jobContexts ]).items() if value > 1 ]
@@ -81,8 +82,24 @@ class SimpleJobManager:
             job.entry(**context)
             self.jobs.append(job)
 
+        self.jobContexts = jobContexts
+
+    def rerun(self):
+        self.join()
+
+        for index, job in enumerate(self.jobs):
+            if not job.hasError():
+                continue
+
+            job = SimpleJob()
+            context = self.jobContexts[index]
+            context["jobManager"] = self
+            context["logOutputDirectory"] = self.logOutputDirecotry
+            job.entry(**context)
+            self.jobs[index] = job
+
     def runAllReadyJobs(self) -> None:
-        [ job.start() for job in self.jobs if job.ready() ]
+        [ job.start() for job in self.jobs if job.ready() and not job.ident]
 
     def running(self) -> bool:
         return len([ job for job in self.jobs if job.running() ]) >= 1
