@@ -25,6 +25,8 @@ if __name__ == "__main__":
             jobManager.join()
             break
 
+        print(jobManager.status())
+
         time.sleep(1)
 
     print(json.dumps(jobManager.report(), indent=4))

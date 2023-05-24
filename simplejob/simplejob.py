@@ -97,6 +97,9 @@ class SimpleJobManager:
 
         return report
 
+    def status(self):
+        return Counter([ job.runningStatus.name for job in self.jobs ])
+
 class SimpleJob(threading.Thread):
     def entry(self, commandLine:str, id:str="", timeout:int=None, retry:int=1, delay:int=0, backoff:int=1, waits:list = [], logOutputDirectory:str="", jobManager:SimpleJobManager=None) -> None:
         if not jobManager and len(waits) > 0:
