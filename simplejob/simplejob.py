@@ -41,8 +41,17 @@ class SimpleJobManager:
 
         graph = { context["id"]: context.get("waits", []) for context in jobContexts }
         return [ id for id in graph.keys() if traceGraph(id, graph) ]
+    
+    def getInvalidWaitsIds(self, jobContexts:list) -> list:
+        ids = { context["id"] for context in jobContexts }
+        waitsIds = { id for context in jobContexts for id in context.get("waits", []) }
+        return waitsIds - ids
 
     def entry(self, jobContexts:list) -> None:
+        invalidIds = self.getInvalidWaitsIds(jobContexts)
+        if len(invalidIds) > 0:
+            raise ValueError(f"Invalid waits Ids={invalidIds}")
+
         dupKeys = self.getDuplicatedIds(jobContexts)
         if len(dupKeys) > 0:
             raise ValueError(f"Id duplicated. ids={dupKeys}")
