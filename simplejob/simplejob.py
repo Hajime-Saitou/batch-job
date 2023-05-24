@@ -25,10 +25,10 @@ class SimpleJobManager:
         self.jobs:list = []
         self.logOutputDirecotry:str = logOutputDirectory
 
-    def getDuplicatedIds(self, jobContexts:list) -> list:
+    def detectDuplicatedIds(self, jobContexts:list) -> list:
         return [ key for ( key, value ) in Counter([ context["id"] for context in jobContexts ]).items() if value > 1 ]
 
-    def getCircularReferencedIds(self, jobContexts:list) -> list:
+    def detectCircularReferencedIds(self, jobContexts:list) -> list:
         def traceGraph(id, graph, visited=set()) -> bool:
             visited.add(id)
 
@@ -42,21 +42,28 @@ class SimpleJobManager:
         graph = { context["id"]: context.get("waits", []) for context in jobContexts }
         return [ id for id in graph.keys() if traceGraph(id, graph) ]
     
-    def getInvalidWaitsIds(self, jobContexts:list) -> list:
+    def detectInvalidWaitsIds(self, jobContexts:list) -> list:
         ids = { context["id"] for context in jobContexts }
         waitsIds = { id for context in jobContexts for id in context.get("waits", []) }
         return waitsIds - ids
+    
+    def detectInvalidIds(self, jobContexts:list) -> list:
+        return [ index for index, context in enumerate(jobContexts) if not context.get("id", None) ]
 
     def entry(self, jobContexts:list) -> None:
-        invalidIds = self.getInvalidWaitsIds(jobContexts)
-        if len(invalidIds) > 0:
-            raise ValueError(f"Invalid waits Ids={invalidIds}")
+        elementIndices = self.detectInvalidIds(jobContexts)
+        if len(elementIndices) > 0:
+            raise ValueError(f"Invalid Id detected. element indices={elementIndices}")
 
-        dupKeys = self.getDuplicatedIds(jobContexts)
+        invalidWaitsIds = self.detectInvalidWaitsIds(jobContexts)
+        if len(invalidWaitsIds) > 0:
+            raise ValueError(f"Invalid waits. ids.={invalidWaitsIds}")
+
+        dupKeys = self.detectDuplicatedIds(jobContexts)
         if len(dupKeys) > 0:
             raise ValueError(f"Id duplicated. ids={dupKeys}")
 
-        circularIds = self.getCircularReferencedIds(jobContexts)
+        circularIds = self.detectCircularReferencedIds(jobContexts)
         if len(circularIds) > 0:
             raise ValueError(f"Circular referenced. ids={circularIds}")
 
