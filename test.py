@@ -11,9 +11,9 @@ if __name__ == "__main__":
     # Run with the JobManager class
     jobContexts = [
         { "id": "hoge", "commandLine": r"timeout /t 1 /nobreak" },
-        { "id": "piyo", "commandLine": r"timeout /t 3 /nobreak", "waiting": [ "hoge" ] },
-        { "id": "fuga", "commandLine": r"timeout /z", "waiting": [ "hoge" ] },
-        { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waiting": [ "hoge", "fuga" ] },
+        { "id": "piyo", "commandLine": r"timeout /t 3 /nobreak", "waits": [ "hoge" ] },
+        { "id": "fuga", "commandLine": r"timeout /z", "waits": [ "hoge" ] },
+        { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waits": [ "hoge", "fuga" ] },
     ]
     jobManager = SimpleJobManager()
     jobManager.entry(jobContexts)

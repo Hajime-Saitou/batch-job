@@ -31,9 +31,9 @@ Waiting list of other job IDs ... List of job IDs waiting to run
 ```
 jobContexts = [
     { "id": "hoge", "commandLine": r"timeout /t 1 /nobreak" },
-    { "id": "piyo", "commandLine": r"timeout /t 3 /nobreak", "waiting": [ "hoge" ] },
-    { "id": "fuga", "commandLine": r"timeout /t 5 /nobreak", "waiting": [ "hoge" ] },
-    { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waiting": [ "hoge", "fuga" ] },
+    { "id": "piyo", "commandLine": r"timeout /t 3 /nobreak", "waits": [ "hoge" ] },
+    { "id": "fuga", "commandLine": r"timeout /t 5 /nobreak", "waits": [ "hoge" ] },
+    { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waits": [ "hoge", "fuga" ] },
 ]
 jobManager = SimpleJobManager()
 jobManager.entry(jobContexts)

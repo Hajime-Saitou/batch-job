@@ -44,7 +44,7 @@ class SimpleJobManager:
             visited.remove(id)
             return False
 
-        graph = { context["id"]: context.get("waiting", []) for context in jobContexts }
+        graph = { context["id"]: context.get("waits", []) for context in jobContexts }
         circularIds = []
         for id in graph:
             if traceGraph(id, graph, None):
@@ -95,13 +95,13 @@ class SimpleJobManager:
         return report
 
 class SimpleJob(threading.Thread):
-    def entry(self, commandLine:str, id:str="", timeout:int=None, retry:int=1, delay:int=0, backoff:int=1, waiting:list = [], logOutputDirectory:str="", jobManager:SimpleJobManager=None) -> None:
-        if not jobManager and len(waiting) > 0:
-            raise ValueError("Waiting list can set the JobManager together.")
+    def entry(self, commandLine:str, id:str="", timeout:int=None, retry:int=1, delay:int=0, backoff:int=1, waits:list = [], logOutputDirectory:str="", jobManager:SimpleJobManager=None) -> None:
+        if not jobManager and len(waits) > 0:
+            raise ValueError("waits list can set the JobManager together.")
 
         self.commandLine:str = commandLine
         self.id:str = id if id != "" else uuid.uuid4()
-        self.waiting:list = waiting
+        self.waits:list = waits
         self.logOutputDirectory:str = logOutputDirectory
         self.logFileName:str = "" if not self.logOutputDirectory else os.path.join(self.logOutputDirectory, f"{self.id}.log")
         self.jobManager:SimpleJobManager = jobManager
@@ -137,15 +137,15 @@ class SimpleJob(threading.Thread):
         if self.runningStatus != JobRunningStatus.Ready:
             return False
 
-        if not self.waiting:
+        if not self.waits:
             return True
         
         if self.jobManager:
             self.jobManager.lock.acquire()
-            completed = [ job for job in self.jobManager.jobs if job.id in self.waiting and job.completed() and not job.hasError() ]
+            completed = [ job for job in self.jobManager.jobs if job.id in self.waits and job.completed() and not job.hasError() ]
             self.jobManager.lock.release()
 
-            return len(completed) == len(self.waiting)
+            return len(completed) == len(self.waits)
 
     def running(self) -> JobRunningStatus:
         return self._runningStatus == JobRunningStatus.Running
