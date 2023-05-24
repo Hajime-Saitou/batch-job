@@ -115,6 +115,8 @@ class SimpleJob(threading.Thread):
         self.runningStatus:JobRunningStatus = JobRunningStatus.Ready
         self.startDateTime:datetime = None
         self.finishDateTime:datetime = None
+        self.startTime:float = 0
+        self.finishTime:float = 0
 
         # retry parameters
         self.retry:int = retry
@@ -161,6 +163,7 @@ class SimpleJob(threading.Thread):
 
     def run(self) -> None:
         self.runningStatus = JobRunningStatus.Running
+        self.startTime = time.perf_counter()
         self.startDateTime = datetime.now()
 
         for trialCounter in range(0, self.retry + 1):
@@ -174,14 +177,16 @@ class SimpleJob(threading.Thread):
                 self.retried = trialCounter
                 time.sleep((trialCounter + 1) ** self.backoff + self.delay)       # Exponential backoff
             else:
-                self.finishDateTime = datetime.now()
                 self.exitCode = completePocess.returncode               # latest return code
                 self.runningStatus = JobRunningStatus.Completed
+                self.finishDateTime = datetime.now()
+                self.finishTime = time.perf_counter()
                 return
 
         self.exitCode = None
-        self.finishDateTime = datetime.now()
         self.runningStatus = JobRunningStatus.RetryOut
+        self.finishDateTime = datetime.now()
+        self.finishTime = time.perf_counter()
 
     def writeLog(self, text) -> None:
         if not self.logOutputDirectory:
@@ -197,17 +202,20 @@ class SimpleJob(threading.Thread):
             "exitCode": self.exitCode  if self.completed() else None,
             "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else None,
             "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else None,
-            "elapsedTime": self.__timedeltaToStr(self.finishDateTime - self.startDateTime) if self.finishDateTime is not None else None
+            "elapsedTime": self.getElapsedTime()
         }
 
-    def __timedeltaToStr(self, delta:timedelta) -> str:
-        totalSeconds = delta.total_seconds()
-        hours = int(totalSeconds / 3600)
-        totalSeconds -= hours * 3600
-        minutes = int(totalSeconds / 60)
-        totalSeconds -= minutes * 60
-        seconds = int(totalSeconds)
-        totalSeconds -= seconds
-        totalSeconds *= 1000000
+    def getElapsedTime(self) -> str:
+        totalMilleSeconds = self.finishTime - self.startTime
+        if totalMilleSeconds == 0:
+            return None
 
-        return f"{hours:02}:{minutes:02}:{seconds:02}.{int(totalSeconds)}"
+        hours = int(totalMilleSeconds / 3600)
+        totalMilleSeconds -= hours * 3600
+        minutes = int(totalMilleSeconds / 60)
+        totalMilleSeconds -= minutes * 60
+        seconds = int(totalMilleSeconds)
+        totalMilleSeconds -= seconds
+        totalMilleSeconds *= 1000000
+
+        return f"{hours:02}:{minutes:02}:{seconds:02}.{int(totalMilleSeconds)}"
