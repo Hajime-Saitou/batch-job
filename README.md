@@ -143,8 +143,6 @@ jobManager.wait()
 
 ## Output the job log
 
-## Output the job log
-
 To output logs, specify the logOutputDirectory parameter to constructor of SimpleJobManager class. The log file name is the job id with a "log" extension.
 
 ```
