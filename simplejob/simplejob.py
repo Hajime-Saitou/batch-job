@@ -88,7 +88,7 @@ class SimpleJobManager:
         self.join()
 
         for index, job in enumerate(self.jobs):
-            if not job.hasError():
+            if not job.hasError() and not job.retryOuted():
                 continue
 
             job = SimpleJob()
@@ -165,6 +165,9 @@ class SimpleJob(threading.Thread):
     def hasError(self) -> bool:
         return self.exitCode != 0
 
+    def retryOuted(self) -> bool:
+        return self.runningStatus == JobRunningStatus.RetryOut
+
     def ready(self) -> bool:
         if self.runningStatus != JobRunningStatus.Ready:
             return False
@@ -223,7 +226,7 @@ class SimpleJob(threading.Thread):
         return {
             "runnigStatus": self.runningStatus.name,
             "retried": self.retried if self.timeout is not None else None,
-            "exitCode": self.exitCode  if self.completed() else None,
+            "exitCode": self.exitCode if self.completed() else None,
             "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else None,
             "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else None,
             "elapsedTime": self.getElapsedTime()
