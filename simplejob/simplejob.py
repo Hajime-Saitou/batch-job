@@ -18,6 +18,9 @@ class JobRunningStatus(enum.IntEnum):
     Completed = 2
     RetryOut = 3
 
+class CalledJobError(Exception):
+    pass
+
 class SimpleJobManager:
     def __init__(self, logOutputDirectory:str="") -> None:
         self.lock:threading.Lock = threading.Lock()
@@ -106,6 +109,15 @@ class SimpleJobManager:
 
     def join(self, interval:int=1) -> None:
         while self.running():
+            time.sleep(interval)
+
+    def wait(self, interval:int=1) -> None:
+        while not self.completed():
+            self.runAllReadyJobs()
+            if self.errorOccurred():
+                self.join(interval)
+                raise CalledJobError("Error occured")
+
             time.sleep(interval)
 
     def completed(self) -> bool:

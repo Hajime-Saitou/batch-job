@@ -40,57 +40,26 @@ jobManager.entry(jobContexts)
 ```
 
 Run all jobs through JobManager.runAllReadyJobs() until all jobs are finished or an error occurs. If necessary, call an interval timer in the loop. The example calls a 1 second interval timer.
-Python's thread can not reentrantlly. Therefore you need re-call the JobManager.entry() with job contexts.
 
 ```
 while not jobManager.completed():
     jobManager.runAllReadyJobs()
     if jobManager.errorOccurred():
         print("error occurred")
+        jobManager.join()
         break
 
     time.sleep(1)
 ```
 
-When referencing the results of an all jobs, wait until an all running jobs finished.
+It can be written on a single line using wait(). If error occred in the wait(), Raise CalledJobException.
 
 ```
-jobManager.join()
-
-for job in jobManager.jobs:
-    print(job.id, job.exitCode, job.runningStatus)
+jobManager.wait()
 ```
 
-## Run with the Job class
+### report
 
-If you want to run a single job, use the Job class. A job class is a wrapping of a threading.Thread class.
-
-At first, import the Job from this module.
-
-```
-from simplejob.simplejob import SimpleJob
-```
-
-Prepare a job context consisting of job id(optional), command line, waiting list of other jobs(do not set), and pass it to as an argument to Job.entry().
-
-```
-job = SimpleJob()
-job.entry(commandLine="timeout /t 3 /nobreak")
-```
-
-When referencing the results of a job, wait until an all running jobs finished.
-
-```
-job.join()
-
-print(job.exitCode)
-```
-
-## Output the job log
-
-To output logs, specify the logOutputDirectory parameter to constructor of JobManager class or Job.entry(). The log file name is the job id with a "log" extension; if the job id is not specified, the base name from the first argument on the command line is used.
-
-## Report
 You can output the execution result as a report by calling report(). Returns an empty result for jobs that have not run.
 
 Example for SimpleJobManager.report()
@@ -103,9 +72,9 @@ Example for SimpleJobManager.report()
                 "runnigStatus": "Completed",
                 "retried": null,
                 "exitCode": 0,
-                "startDateTime": "2023/05/18 21:45:24.243201",
-                "finishDateTime": "2023/05/18 21:45:25.189776",
-                "elapsedTime": "00:00:00.946575"
+                "startDateTime": "2023/05/26 00:12:39.741372",
+                "finishDateTime": "2023/05/26 00:12:40.204306",
+                "elapsedTime": "00:00:00.463711"
             }
         },
         {
@@ -113,49 +82,36 @@ Example for SimpleJobManager.report()
                 "runnigStatus": "Completed",
                 "retried": null,
                 "exitCode": 0,
-                "startDateTime": "2023/05/18 21:45:25.253739",
-                "finishDateTime": "2023/05/18 21:45:28.116363",
-                "elapsedTime": "00:00:02.862623"
+                "startDateTime": "2023/05/26 00:12:40.755401",
+                "finishDateTime": "2023/05/26 00:12:43.177881",
+                "elapsedTime": "00:00:02.422424"
             }
         },
         {
             "fuga": {
                 "runnigStatus": "Completed",
                 "retried": null,
-                "exitCode": 1,
-                "startDateTime": "2023/05/18 21:45:25.253739",
-                "finishDateTime": "2023/05/18 21:45:25.269691",
-                "elapsedTime": "00:00:00.15952"
+                "exitCode": 0,
+                "startDateTime": "2023/05/26 00:12:40.762754",
+                "finishDateTime": "2023/05/26 00:12:41.122336",
+                "elapsedTime": "00:00:00.364163"
             }
         },
         {
             "moga": {
-                "runnigStatus": "Ready",
+                "runnigStatus": "Completed",
                 "retried": null,
-                "exitCode": null,
-                "startDateTime": null,
-                "finishDateTime": null,
-                "elapsedTime": null
+                "exitCode": 0,
+                "startDateTime": "2023/05/26 00:12:43.800788",
+                "finishDateTime": "2023/05/26 00:12:45.155410",
+                "elapsedTime": "00:00:01.352033"
             }
         }
     ]
 }
 ```
 
-Example for SimpleJob.report()
-
-```
-{
-    "runnigStatus": "Completed",
-    "retried": null,
-    "exitCode": 0,
-    "startDateTime": "2023/05/18 21:45:28.276206",
-    "finishDateTime": "2023/05/18 21:45:31.197224",
-    "elapsedTime": "00:00:02.921018"
-}
-```
-
-## Retry on timed out
+### Retry on timed out
 If the job fails by timed out, it can be retried. The retry parameters are as follows.Retry parameters can be set for individual jobs.
 
 retry ... Retry count (default is 0, no retry)
@@ -174,4 +130,23 @@ The report for a failed retry is shown below.
     "finishDateTime": "2023/05/18 21:47:43.594701",
     "elapsedTime": "00:00:05.65712"
 }
+```
+
+### rerun
+
+After the cause of the error has been resolved, the job can be rerun using rerun(). The remaining jobs use wait() to run the job until all jobs have finished or until the error occurs again.
+
+```
+jobManager.rerun()
+jobManager.wait()
+```
+
+## Output the job log
+
+## Output the job log
+
+To output logs, specify the logOutputDirectory parameter to constructor of SimpleJobManager class. The log file name is the job id with a "log" extension.
+
+```
+jobManager = SimpleJobManager(r"C:\temp\log")
 ```

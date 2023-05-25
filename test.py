@@ -12,30 +12,11 @@ if __name__ == "__main__":
     jobContexts = [
         { "id": "hoge", "commandLine": r"timeout /t 1 /nobreak" },
         { "id": "piyo", "commandLine": r"timeout /t 3 /nobreak", "waits": [ "hoge" ] },
-        { "id": "fuga", "commandLine": r"timeout /z", "waits": [ "hoge" ] },
-        { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waits": [ "hoge", "fuga" ] },
+        { "id": "fuga", "commandLine": r"timeout /t 1 /nobreak", "waits": [ "hoge" ] },
+        { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waits": [ "piyo", "fuga" ] },
     ]
     jobManager = SimpleJobManager()
     jobManager.entry(jobContexts)
-
-    while not jobManager.completed():
-        jobManager.runAllReadyJobs()
-        if jobManager.errorOccurred():
-            print("error occurred")
-            jobManager.join()
-            break
-
-        print(jobManager.getRunningStatus())
-
-        time.sleep(1)
+    jobManager.wait()
 
     print(json.dumps(jobManager.report(), indent=4))
-
-    # Run with the Job class
-    job = SimpleJob()
-    job.entry(commandLine="timeout /t 3 /nobreak")
-    job.start()
-
-    job.join()
-
-    print(json.dumps(job.report(), indent=4))
