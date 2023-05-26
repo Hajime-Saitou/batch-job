@@ -24,9 +24,9 @@ from simplejob.simplejob import SimpleJobManager
 
 Prepare a job context consisting of job parameters and pass it as an argument to JobManager.entry().
 
-id ... Job ID (arbitrary name, if omitted, the base name of the first command line argument)
-command line ... command to execute and command line parameters
-Waiting list of other job IDs ... List of job IDs waiting to run
++ id ... Job ID (arbitrary name, if omitted, the base name of the first command line argument)
++ commandLine ... command to execute and command line parameters
+* Waits ... List of job IDs waiting to run
 
 ```
 jobContexts = [
@@ -121,10 +121,10 @@ Example for SimpleJobManager.report()
 ### Retry on timed out
 If the job fails by timed out, it can be retried. The retry parameters are as follows.Retry parameters can be set for individual jobs.
 
-retry ... Retry count (default is 0, no retry)
-timeout ... Number of seconds to timeout the job (default is None, no timeout)
-delay ... number of seconds to delay the job on retry (default 0, no delay)
-backkoff ... power to back off the retry interval (default 1)
++ retry ... Retry count (default is 0, no retry)
++ timeout ... Number of seconds to timeout the job (default is None, no timeout)
++ delay ... number of seconds to delay the job on retry (default 0, no delay)
++ backkoff ... power to back off the retry interval (default 1)
 
 The report for a failed retry is shown below.
 
