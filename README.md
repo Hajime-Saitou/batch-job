@@ -33,7 +33,7 @@ jobContexts = [
     { "id": "hoge", "commandLine": r"timeout /t 1 /nobreak" },
     { "id": "piyo", "commandLine": r"timeout /t 3 /nobreak", "waits": [ "hoge" ] },
     { "id": "fuga", "commandLine": r"timeout /t 5 /nobreak", "waits": [ "hoge" ] },
-    { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waits": [ "hoge", "fuga" ] },
+    { "id": "moga", "commandLine": r"timeout /t 2 /nobreak", "waits": [ "piyo", "fuga" ] },
 ]
 jobManager = SimpleJobManager()
 jobManager.entry(jobContexts)
@@ -42,11 +42,14 @@ jobManager.entry(jobContexts)
 Run all jobs through JobManager.runAllReadyJobs() until all jobs are finished or an error occurs. If necessary, call an interval timer in the loop. The example calls a 1 second interval timer.
 
 ```
-while not jobManager.completed():
+while True:
     jobManager.runAllReadyJobs()
     if jobManager.errorOccurred():
         print("error occurred")
         jobManager.join()
+        break
+
+    if jobManager.completed():
         break
 
     time.sleep(1)
@@ -70,41 +73,45 @@ Example for SimpleJobManager.report()
         {
             "hoge": {
                 "runnigStatus": "Completed",
-                "retried": null,
                 "exitCode": 0,
-                "startDateTime": "2023/05/26 00:12:39.741372",
-                "finishDateTime": "2023/05/26 00:12:40.204306",
-                "elapsedTime": "00:00:00.463711"
+                "retried": null,
+                "commandLine": "timeout /t 1 /nobreak",
+                "startDateTime": "2023/05/27 05:42:16.595910",
+                "finishDateTime": "2023/05/27 05:42:17.172984",
+                "elapsedTime": "00:00:00.580679"
             }
         },
         {
             "piyo": {
                 "runnigStatus": "Completed",
-                "retried": null,
                 "exitCode": 0,
-                "startDateTime": "2023/05/26 00:12:40.755401",
-                "finishDateTime": "2023/05/26 00:12:43.177881",
-                "elapsedTime": "00:00:02.422424"
+                "retried": null,
+                "commandLine": "timeout /t 3 /nobreak",
+                "startDateTime": "2023/05/27 05:42:17.589688",
+                "finishDateTime": "2023/05/27 05:42:20.131554",
+                "elapsedTime": "00:00:02.537245"
             }
         },
         {
             "fuga": {
                 "runnigStatus": "Completed",
-                "retried": null,
                 "exitCode": 0,
-                "startDateTime": "2023/05/26 00:12:40.762754",
-                "finishDateTime": "2023/05/26 00:12:41.122336",
-                "elapsedTime": "00:00:00.364163"
+                "retried": null,
+                "commandLine": "timeout /t 1 /nobreak",
+                "startDateTime": "2023/05/27 05:42:17.597681",
+                "finishDateTime": "2023/05/27 05:42:18.177357",
+                "elapsedTime": "00:00:00.584966"
             }
         },
         {
             "moga": {
                 "runnigStatus": "Completed",
-                "retried": null,
                 "exitCode": 0,
-                "startDateTime": "2023/05/26 00:12:43.800788",
-                "finishDateTime": "2023/05/26 00:12:45.155410",
-                "elapsedTime": "00:00:01.352033"
+                "retried": null,
+                "commandLine": "timeout /t 2 /nobreak",
+                "startDateTime": "2023/05/27 05:42:20.636437",
+                "finishDateTime": "2023/05/27 05:42:22.192478",
+                "elapsedTime": "00:00:01.556920"
             }
         }
     ]
@@ -124,8 +131,9 @@ The report for a failed retry is shown below.
 ```
 {
     "runnigStatus": "RetryOut",
-    "retried": 1,
     "exitCode": null,
+    "retried": 1,
+    "commandLine": "timeout /t 2 /nobreak",
     "startDateTime": "2023/05/18 21:47:38.528989",
     "finishDateTime": "2023/05/18 21:47:43.594701",
     "elapsedTime": "00:00:05.65712"

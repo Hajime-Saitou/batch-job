@@ -112,13 +112,19 @@ class SimpleJobManager:
             time.sleep(interval)
 
     def wait(self, interval:int=1) -> None:
-        while not self.completed():
+        while True:
             self.runAllReadyJobs()
             if self.errorOccurred():
                 self.join(interval)
-                raise CalledJobError("Error occured")
+                break
+
+            if self.completed():
+                break
 
             time.sleep(interval)
+
+        if self.errorOccurred():
+            raise CalledJobError("Error occured")
 
     def completed(self) -> bool:
         return len([ job for job in self.jobs if job.completed() ]) == len(self.jobs)
@@ -237,8 +243,9 @@ class SimpleJob(threading.Thread):
     def report(self) -> dict:
         return {
             "runnigStatus": self.runningStatus.name,
-            "retried": self.retried if self.timeout is not None else None,
             "exitCode": self.exitCode if self.completed() else None,
+            "retried": self.retried if self.timeout is not None else None,
+            "commandLine": self.commandLine,
             "startDateTime": self.startDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.startDateTime is not None else None,
             "finishDateTime": self.finishDateTime.strftime('%Y/%m/%d %H:%M:%S.%f') if self.finishDateTime is not None else None,
             "elapsedTime": self.getElapsedTime()
