@@ -11,6 +11,7 @@ import enum
 import os
 import uuid
 from collections import Counter
+import json
 
 class JobRunningStatus(enum.IntEnum):
     Ready = 0
@@ -54,6 +55,10 @@ class SimpleJobManager:
     def detectInvalidIds(self, jobContexts:list) -> list:
         return [ index for index, context in enumerate(jobContexts) if not context.get("id", None) ]
 
+    def entryFromJson(self, filename:str):
+        with open(filename, "r") as f:
+            self.entry(json.load(f)["jobContexts"])
+
     def entry(self, jobContexts:list) -> None:
         elementIndices = self.detectInvalidIds(jobContexts)
         if len(elementIndices) > 0:
@@ -87,8 +92,8 @@ class SimpleJobManager:
 
         self.jobContexts = jobContexts
 
-    def rerun(self):
-        self.join()
+    def rerun(self, interval:float=1.0):
+        self.join(interval)
 
         for index, job in enumerate(self.jobs):
             if not job.hasError() and not job.retryOuted():
@@ -101,17 +106,19 @@ class SimpleJobManager:
             job.entry(**context)
             self.jobs[index] = job
 
+        self.run(interval)
+
     def runAllReadyJobs(self) -> None:
         [ job.start() for job in self.jobs if job.ready() and not job.ident]
 
     def running(self) -> bool:
         return len([ job for job in self.jobs if job.running() ]) >= 1
 
-    def join(self, interval:int=1) -> None:
+    def join(self, interval:float=1.0) -> None:
         while self.running():
             time.sleep(interval)
 
-    def wait(self, interval:int=1) -> None:
+    def run(self, interval:float=1.0) -> None:
         while True:
             self.runAllReadyJobs()
             if self.errorOccurred():
@@ -137,7 +144,7 @@ class SimpleJobManager:
         for job in self.jobs:
             report["results"].append({ job.id: job.report() })
 
-        return report
+        return json.dumps(report, indent=4)
 
     def getRunningStatus(self):
         return Counter([ job.runningStatus.name for job in self.jobs ])
