@@ -55,10 +55,10 @@ while True:
     time.sleep(1)
 ```
 
-It can be written on a single line using wait(). If error occred in the wait(), Raise CalledJobException.
+It can be written on a single line using run(). If error occred in the run(), Raise CalledJobException.
 
 ```
-jobManager.wait()
+jobManager.run()
 ```
 
 ### report
@@ -142,11 +142,10 @@ The report for a failed retry is shown below.
 
 ### rerun
 
-After the cause of the error has been resolved, the job can be rerun using rerun(). The remaining jobs use wait() to run the job until all jobs have finished or until the error occurs again.
+After the cause of the error has been resolved, the job can be rerun using rerun().
 
 ```
 jobManager.rerun()
-jobManager.wait()
 ```
 
 ## Output the job log
