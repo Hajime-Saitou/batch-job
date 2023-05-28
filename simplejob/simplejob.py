@@ -12,6 +12,7 @@ import os
 import uuid
 from collections import Counter
 import json
+import contextlib
 
 class JobRunningStatus(enum.IntEnum):
     Ready = 0
@@ -57,7 +58,12 @@ class SimpleJobManager:
 
     def entryFromJson(self, filename:str):
         with open(filename, "r") as f:
-            self.entry(json.load(f)["jobContexts"])
+            jobContexts = json.load(f)["jobContexts"]
+
+            if len([ context for context in jobContexts if context.get("semaphore", None) is not None ]) > 0:
+                raise ValueError("Key 'semaphore' can not be specified for JSON data read from a file.")
+
+            self.entry(jobContexts)
 
     def entry(self, jobContexts:list) -> None:
         elementIndices = self.detectInvalidIds(jobContexts)
@@ -150,13 +156,14 @@ class SimpleJobManager:
         return Counter([ job.runningStatus.name for job in self.jobs ])
 
 class SimpleJob(threading.Thread):
-    def entry(self, commandLine:str, id:str="", timeout:int=None, retry:int=1, delay:int=0, backoff:int=1, waits:list = [], logOutputDirectory:str="", jobManager:SimpleJobManager=None) -> None:
+    def entry(self, commandLine:str, id:str="", timeout:int=None, retry:int=1, delay:int=0, backoff:int=1, waits:list=[], semaphore=None, logOutputDirectory:str="", jobManager:SimpleJobManager=None) -> None:
         if not jobManager and len(waits) > 0:
             raise ValueError("waits list can set the JobManager together.")
 
         self.commandLine:str = commandLine
         self.id:str = id if id != "" else uuid.uuid4()
         self.waits:list = waits
+        self.semaphore = semaphore
         self.logOutputDirectory:str = logOutputDirectory
         self.logFileName:str = "" if not self.logOutputDirectory else os.path.join(self.logOutputDirectory, f"{self.id}.log")
         self.jobManager:SimpleJobManager = jobManager
@@ -220,7 +227,8 @@ class SimpleJob(threading.Thread):
 
         for trialCounter in range(0, self.retry + 1):
             try:
-                completePocess = subprocess.run(self.commandLine, capture_output=True, text=True, timeout=self.timeout)
+                with self.semaphore if self.semaphore is not None else contextlib.nullcontext():
+                    completePocess = subprocess.run(self.commandLine, capture_output=True, text=True, timeout=self.timeout)
                 self.writeLog(completePocess.stdout)
             except subprocess.TimeoutExpired as e:
                 self.writeLog(e.output)
